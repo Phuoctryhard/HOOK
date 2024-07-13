@@ -1,0 +1,27 @@
+useMemo() hook | Tránh thực hiện lại 1 logic không cần thiết với useMemo()
+
+nhắc lại : 
+- memo ôm componen : tránh thực hiện re-render ko cần thiết 
+- useMemo : trong phần thân function component , tránh thực hiện tính toán lại  logic ko cần thiết 
+
+Mẹo đổi sáng number :
+Sài dấu +
++ price 
+
+const cachedValue = useMemo(calculateValue, dependencies)
+
+
+
+
+Parameters
+calculateValue: Đây là hàm tính toán giá trị mà bạn muốn lưu vào bộ nhớ cache.
+Nó phải là một hàm thuần túy (pure function), không nhận tham số và trả về một giá trị bất kỳ.
+React sẽ gọi hàm này trong lần render ban đầu. Trong các lần render tiếp theo, React sẽ trả về cùng một giá trị nếu các dependency không thay đổi kể từ lần render trước đó. Nếu các dependency đã thay đổi, React sẽ gọi lại hàm calculateValue, lưu và trả về kết quả mới để có thể sử dụng sau này.
+
+dependencies: Đây là mảng các giá trị phản ứng (reactive values) mà calculateValue sử dụng để tính toán. 
+Các giá trị phản ứng bao gồm props, state và tất cả các biến và hàm được khai báo trực tiếp bên trong thân component của bạn. Nếu bạn sử dụng linter cho React, nó sẽ kiểm tra và đảm bảo mỗi giá trị phản ứng được chỉ định đúng là dependency. Danh sách dependencies phải có số lượng item cố định và được viết trực tiếp như [dep1, dep2, dep3]. React sẽ so sánh mỗi dependency với giá trị trước của nó bằng cách sử dụng so sánh Object.is.
+
+Returns
+Trong lần render ban đầu, useMemo sẽ trả về kết quả của việc gọi calculateValue với không có đối số nào.
+
+Trong các lần render tiếp theo, useMemo sẽ trả về giá trị đã lưu từ lần render trước đó (nếu các dependencies không thay đổi), hoặc gọi lại calculateValue và trả về kết quả mới mà calculateValue đã trả về

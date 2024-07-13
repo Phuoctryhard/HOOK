@@ -1,0 +1,61 @@
+- you cache a function definition between re-renders.
+- Tránh tạo ra hàm mới không cần thiết với useCallback() trong functiom Component 
+
+
+-tối ưu quá trình render của React functional components
+useCallback khi chúng ta không muốn function của chúng ta được khởi tạo lại mỗi lần component chúng ta re-render
+
+Ví dụ, nếu bạn truyền vào useCallback một hàm callback và một mảng các dependencies, React sẽ theo dõi các dependencies này. Nếu bất kỳ dependency nào trong mảng thay đổi giá trị so với lần render trước đó, useCallback sẽ tạo ra lại hàm callback. Ngược lại, nếu không có sự thay đổi nào trong các dependencies, 
+useCallback sẽ trả về phiên bản hàm callback đã lưu trữ từ lần render trước mà không cần tạo ra một phiên bản mới.
+
+Cú pháp: const cachedFn = useCallback(fn, dependencies)
+
+Returns 
+On the initial render, useCallback returns the fn function you have passed.
+
+During subsequent renders, it will either return an already stored fn  function from the last render (if the dependencies haven’t changed), or return the fn function you have passed during this render.
+
+
++ fn: Giá trị của hàm mà bạn muốn lưu cache. Hàm này có thể nhận bất kỳ đối số nào và trả về bất kỳ giá trị nào.
+ React sẽ trả về (không gọi!) hàm của bạn trong lần render ban đầu. 
+ Trong các lần render sau, nếu các dependencies chưa thay đổi kể từ lần render trước đó, 
+ React sẽ cung cấp lại cho bạn cùng một hàm. Nếu có sự thay đổi trong các dependencies, React sẽ cung cấp cho bạn hàm mà bạn đã truyền vào trong lần render hiện tại, và lưu trữ nó để có thể tái sử dụng sau này. React sẽ không gọi hàm của bạn. Hàm được trả về cho bạn để bạn có thể quyết định khi nào và liệu có cần gọi nó hay không.
+
+dependencies: Danh sách các giá trị có thể phản ứng mà được tham chiếu bên trong mã của hàm fn. 
+Các giá trị phản ứng bao gồm props, state, và tất cả các biến và hàm được khai báo trực tiếp bên trong thân component của bạn.
+Nếu linter của bạn được cấu hình cho React, nó sẽ xác minh rằng mọi giá trị phản ứng được chỉ định đúng là dependency.
+Danh sách dependencies phải có số lượng mục hằng định và được viết trực tiếp như [dep1, dep2, dep3]. React sẽ so sánh mỗi dependency với giá trị trước của nó bằng thuật toán so sánh Object.is.
+
+
+
+- Reference types 
+- React Memo()
+
+
+Giải thích kĩ hơn anh sơn : 
+Lần đầu app đc mouse ,usecallback nhận callback tạo ra hàm ->nhận tham chiếu và gán tham chiếu cho biến 
+nếu re-render lại , nếu dependency trống thì nó trả lại tham chiếu trước đó ở lần mouse thay vè tạo ham mới 
+nếu dependency có thay đổi => useCall tạo callback  mới tạo tham chiếu mới >< tạo tham chiếu trước đó 
+
+ component nhận nhiều tham chiếu , nguyên thủy or tham chiếu => có thể objct , array 
+ useReact memo cho functiom con thì những cái function ohair sử dụng useCallback cho việc re-render ko cần thiết 
+
++ Lợi ích :
+Skipping re-rendering of components 
+
+
+
+
+
+
+
+
+++++++++ React.memo()
+- Tránh Re-render component con khi không cần thiết 
+- cho phép bỏ qua re-render component nếu như props ko thay đổi 
+
+vd : cpn cha : app , cpn con : context 
+- xử lí sự kiện click tăng biến đếm : gọi hàm thì cập nhật lại biến đếm -> re-render app, vì context là cpn con nó cũng sẽ re-render mặc dù nó ko thay đổi props 
+=>Giải pháp:  React.memo
+
+- Kiểm tra props truyền vào component con có thay đổi ko = toán tử 3 dấu = 

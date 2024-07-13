@@ -1,0 +1,101 @@
++ useRef là một hook trong React được sử dụng để lưu trữ các tham chiếu đến các phần tử DOM 
+hoặc các giá trị khác mà không gây ra việc render lại (re-render) component khi giá trị thay đổi. 
+
+
++ Tham số
+
+initialValue: Giá trị mà bạn muốn thuộc tính current của đối tượng ref có được ban đầu. Nó có thể là một giá trị của bất kỳ loại dữ liệu nào. Đối số này sẽ bị bỏ qua sau lần render ban đầu.
+
+Returns
+
+useRef trả về một đối tượng với một thuộc tính duy nhất:
+
+current: Ban đầu, nó được thiết lập với giá trị initialValue mà bạn đã truyền vào. Sau đó, bạn có thể thiết lập nó thành một giá trị khác. Nếu bạn truyền đối tượng ref này cho React như một thuộc tính ref của một nút JSX, React sẽ thiết lập thuộc tính current của nó.
+
+Trong các lần render tiếp theo, useRef sẽ trả về cùng một đối tượng.
+
+Nhắc nhở
+
+Bạn có thể thay đổi thuộc tính ref.current. Khác với state, nó là một đối tượng có thể thay đổi. Tuy nhiên, nếu nó chứa một đối tượng được sử dụng cho việc render (ví dụ như một phần của state của bạn), bạn không nên thay đổi đối tượng đó.
+
+Khi bạn thay đổi thuộc tính ref.current, React không re-render lại component của bạn. React không nhận biết khi nào bạn thay đổi nó vì ref là một đối tượng JavaScript thuần túy.
+
+Đừng viết hoặc đọc ref.current trong quá trình rendering, ngoại trừ quá trình khởi tạo. Điều này làm cho hành vi của component của bạn không thể đoán trước được.
+
+Trong Chế độ nghiêm ngặt (Strict Mode), React sẽ gọi lại hàm component của bạn hai lần để giúp bạn tìm các tác động vô tình. Đây là hành vi chỉ dành cho quá trình phát triển và không ảnh hưởng đến sản phẩm cuối. Mỗi đối tượng ref sẽ được tạo hai lần, nhưng một trong các phiên bản này sẽ bị loại bỏ. Nếu hàm component của bạn là thuần túy (như nên có), điều này không nên ảnh hưởng đến hành vi của nó.
+
+
+
+
++ Ví dụ :
+
+Lưu trữ tham chiếu đến phần tử DOM
+jsx
+Sao chép mã
+import React, { useRef, useEffect } from 'react';
+
+const MyComponent = () => {
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    // Focus vào input element khi component được mount
+    inputRef.current.focus();
+  }, []);
+
+  return (
+    <div>
+      <input ref={inputRef} type="text" />
+      <button onClick={() => inputRef.current.focus()}>Focus</button>
+    </div>
+  );
+};
+
+export default MyComponent;
+
+
+Trong ví dụ này:
+
+useRef(null) khởi tạo một biến tham chiếu (inputRef) với giá trị ban đầu là null.
+Khi component được render, ref được truyền vào phần tử input, làm cho inputRef.current trỏ đến phần tử input này.
+Khi component được mount (useEffect với dependency rỗng []), inputRef.current.focus() được gọi để focus vào phần tử input.
+Khi nhấn vào nút "Focus", inputRef.current.focus() được gọi lại để focus vào phần tử input.
+
+
+
++ useRef trả về một đối tượng ref với một thuộc tính duy nhất là current, ban đầu được thiết lập với giá trị khởi đầu mà bạn cung cấp.
+
+Trong các lần render tiếp theo, useRef sẽ trả về cùng một đối tượng này. Bạn có thể thay đổi thuộc tính current của nó để lưu trữ thông tin và đọc lại sau này. Điều này có thể khiến bạn nhớ đến state, nhưng có một sự khác biệt quan trọng.
+
+Thay đổi một ref không kích hoạt việc re-render. Điều này có nghĩa là refs rất thích hợp để lưu trữ thông tin mà không ảnh hưởng đến đầu ra hình ảnh của component của bạn. Ví dụ, nếu bạn cần lưu trữ một ID của interval và lấy lại sau này, bạn có thể đặt nó vào một ref. Để cập nhật giá trị bên trong ref, bạn cần thay đổi thuộc tính current của nó một cách thủ công.
+
+
++ Bằng cách sử dụng một ref, bạn đảm bảo rằng:
+
+Bạn có thể lưu trữ thông tin giữa các lần re-render (không giống như các biến thông thường, mà reset vào mỗi lần render).
+Thay đổi ref không kích hoạt một lần re-render mới (không giống như biến state, mà thay đổi sẽ kích hoạt một lần re-render).
+Thông tin được lưu trữ cục bộ trong từng bản sao của component của bạn (không giống như các biến bên ngoài, mà được chia sẻ).
+Việc thay đổi một ref không kích hoạt một lần re-render, do đó refs không phù hợp để lưu trữ thông tin mà bạn muốn hiển thị trên màn hình. 
+Thay vào đó, hãy sử dụng state cho mục đích đó. Đọc thêm về cách lựa chọn giữa useRef và useState.
+
+
+
+You can read or write refs from event handlers or effects instead.
+
+function MyComponent() {
+  // ...
+  useEffect(() => {
+    // ✅ You can read or write refs in effects
+    myRef.current = 123;
+  });
+  // ...
+  function handleClick() {
+    // ✅ You can read or write refs in event handlers
+    doSomething(myOtherRef.current);
+  }
+  // ...
+}
+
+If you have to read or write something during rendering, use state instead.
+
+When you break these rules, your component might still work, but most of the newer features we’re adding to React will rely on these expectations.
+ Read more about keeping your components pure.
