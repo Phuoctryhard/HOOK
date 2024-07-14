@@ -1,0 +1,112 @@
++ ADD ITEMS
+... array spread syntax:
+setArtists( // Replace the state
+  [ // with a new array
+    ...artists, // that contains all the old items
+    { id: nextId++, name: name } // and one new item at the end
+  ]
+);
+
+
+The array spread syntax also lets you prepend an item by placing it before the original ...artists:
+
+setArtists([
+  { id: nextId++, name: name },
+  ...artists // Put old items at the end
+]);
+
+An this way, spread can do the job of both push() by adding to the end of an array and unshift() by adding to the beginning of an array. Try it in the sandbox above!
+
+
+
+ const insertAt = 1; // Could be any index
+    const nextArtists = [
+      // Items before the insertion point:
+      ...artists.slice(0, insertAt),
+      // New item:
+      { id: nextId++, name: name },
+      // Items after the insertion point:
+      ...artists.slice(insertAt)
+    ];
+    setArtists(nextArtists);
+
+
+
++++++REMOVE ITEMS :
+ Removing from an array 
+ The easiest way to remove an item from an array is to filter it out.
+In other words, you will produce a new array that will not contain that item. To do this, use the filter method, for example:
+
+<ul>
+        {artists.map(artist => (
+          <li key={artist.id}>
+            {artist.name}{' '}
+            <button onClick={() => {
+              setArtists(
+                artists.filter(a =>
+                  a.id !== artist.id
+                )
+              );
+            }}>
+              Delete
+            </button>
+          </li>
+        ))}
+      </ul>
+
+=>>> Click the “Delete” button a few times, and look at its click handler.
+
+setArtists(
+  artists.filter(a => a.id !== artist.id)
+);
+
+ere, artists.filter(a => a.id !== artist.id) means “create an array that consists of those artists whose IDs are different from artist.id”. 
+In other words, each artist’s “Delete” button will filter that artist out of the array, and then request a re-render with the resulting array.
+ Note that filter does not modify the original array.
+
+
+
+
+ + Updating objects inside arrays 
+
+ You can use map to substitute an old item with its updated version without mutation.
+
+setMyList(myList.map(artwork => {
+  if (artwork.id === artworkId) {
+    // Create a *new* object with changes
+    return { ...artwork, seen: nextSeen };
+  } else {
+    // No changes
+    return artwork;
+  }
+}));
+
+
+
+
+Here, ... is the object spread syntax used to create a copy of an object.
+
+With this approach, none of the existing state items are being mutated, and the bug is fixed:
+
+setMyList(myList.map(artwork => {
+      if (artwork.id === artworkId) {
+        // Create a *new* object with changes
+        return { ...artwork, seen: nextSeen };
+      } else {
+        // No changes
+        return artwork;
+      }
+
+ + Thực hiện 1 số thử thách Thêm xóa sửa lọc 
+ https://react.dev/learn/updating-arrays-in-state#adding-to-an-array
+
+
+
+ Tóm tắt 
+
+ Recap
+You can put arrays into state, but you can’t change them.
+Instead of mutating an array, create a new version of it, and update the state to it.
+You can use the [...arr, newItem] array spread syntax to create arrays with new items.
+You can use filter() and map() to create new arrays with filtered or transformed items.
+You can use Immer to keep your code concise.

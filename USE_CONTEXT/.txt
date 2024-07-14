@@ -1,0 +1,740 @@
++ useConText 
+useContext là một trong những React Hook cơ bản cho phép bạn truy cập các giá trị từ Context trong 
+các thành phần của ứng dụng React của bạn mà không cần phải thông qua các bước truyền props qua các thành phần con. 
+Bằng cách sử dụng useContext, bạn có thể đăng ký nhận thông tin từ Context và sử dụng nó trong thành phần của mình 
+
+Cú pháp :
+const valueContext = useContext(SomeContext) 
+
+
+Tham số
+SomeContext: Context mà bạn đã tạo trước đó bằng createContext. Context này không chứa thông tin mà chỉ đại diện cho loại thông tin mà bạn có thể cung cấp hoặc đọc từ các thành phần.
+
+Trả về
+useContext trả về giá trị context cho thành phần gọi nó. Giá trị này được xác định là giá trị được truyền cho
+SomeContext.Provider gần nhất phía trên thành phần gọi useContext trong cây component. 
+Nếu không có nhà cung cấp nào như vậy, giá trị trả về sẽ là giá trị mặc định (defaultValue) bạn đã truyền cho createContext cho context đó.
+ Giá trị trả về luôn được cập nhật. React tự động làm mới các thành phần mà đọc một context nếu nó thay đổi.
+
+
+
+Nhược điểm
+Cuộc gọi useContext() trong một thành phần không bị ảnh hưởng bởi các nhà cung cấp được trả về từ cùng một thành phần.
+ <Context.Provider> tương ứng cần phải ở trên thành phần gọi useContext().
+React tự động làm mới tất cả các thành phần con sử dụng một context cụ thể bắt đầu từ nhà cung cấp nhận giá trị khác nhau. 
+
+Giá trị trước và giá trị sau được so sánh bằng phương pháp so sánh Object.is. Bỏ qua việc làm mới với memo không ngăn các con nhận giá trị context mới.
+Nếu hệ thống build của bạn sản xuất các module trùng lặp trong đầu ra (điều này có thể xảy ra với các liên kết tượng trưng), 
+điều này có thể làm hỏng context. Chỉ chuyển qua context hoạt động nếu SomeContext mà bạn sử dụng để cung cấp context 
+và SomeContext mà bạn sử dụng để đọc nó là chính xác cùng một đối tượng, được xác định bằng phép so sánh ===.
+
+
+Usage 
+useContext trả về giá trị context cho context mà bạn đã truyền. Để xác định giá trị context, 
+React tìm kiếm trong cây component và tìm thấy nhà cung cấp context gần nhất phía trên cho context cụ thể đó.
+
+Để chuyển context cho một nút (Button), hãy bao nó hoặc một trong các thành phần cha của nó bằng nhà cung cấp context tương ứng.
+
+function MyPage() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <Form />
+    </ThemeContext.Provider>
+  );
+}
+
+function Form() {
+  // ... renders buttons inside ...
+}
+
+Không quan trọng có bao nhiêu lớp thành phần giữa nhà cung cấp và nút (Button). 
+Khi một nút bất kỳ bên trong thành phần Form gọi useContext(ThemeContext), nó sẽ nhận được giá trị "dark" làm giá trị.
+
+Pifalls :
+useContext() luôn tìm kiếm nhà cung cấp gần nhất phía trên thành phần gọi nó. 
+Nó tìm kiếm lên trên và không xem xét các nhà cung cấp trong chính thành phần từ đó bạn gọi useContext().
+
++ Passing data deeply into the tree 
+
+import { createContext, useContext } from 'react';
+
+const ThemeContext = createContext(null);
+
+export default function MyApp() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <Form />
+    </ThemeContext.Provider>
+  )
+}
+
+function Form() {
+  return (
+    <Panel title="Welcome">
+      <Button>Sign up</Button>
+      <Button>Log in</Button>
+    </Panel>
+  );
+}
+
+function Panel({ title, children }) {
+  const theme = useContext(ThemeContext);
+  const className = 'panel-' + theme;
+  return (
+    <section className={className}>
+      <h1>{title}</h1>
+      {children}
+    </section>
+  )
+}
+
+function Button({ children }) {
+  const theme = useContext(ThemeContext);
+  const className = 'button-' + theme;
+  return (
+    <button className={className}>
+      {children}
+    </button>
+  );
+}
+=> provider thường ở component cha 
+
++ Updating data passed via context 
+Để cập nhật context, kết hợp nó với trạng thái (state).
+Khai báo một biến trạng thái trong thành phần cha, và truyền giá trị trạng thái hiện tại xuống dưới dạng giá trị context cho nhà cung cấp.
+
+
+function MyPage() {
+  const [theme, setTheme] = useState('dark');
+  return (
+    <ThemeContext.Provider value={theme}>
+      <Form />
+      <Button onClick={() => {
+        setTheme('light');
+      }}>
+        Switch to light theme
+      </Button>
+    </ThemeContext.Provider>
+  );
+}
+
+Bây giờ, bất kỳ Button nào bên trong nhà cung cấp sẽ nhận giá trị chủ đề hiện tại.
+Nếu bạn gọi setTheme để cập nhật giá trị chủ đề mà bạn truyền cho nhà cung cấp, tất cả các thành phần Button sẽ được render lại với giá trị mới là 'light'.
+
+
+Ví dụ:
+
+ Examples of updating context
+
+
+ import { createContext, useContext, useState } from 'react';
+
+const ThemeContext = createContext(null);
+
+export default function MyApp() {
+  const [theme, setTheme] = useState('light');
+  return (
+    <ThemeContext.Provider value={theme}>
+      <Form />
+      <label>
+        <input
+          type="checkbox"
+          checked={theme === 'dark'}
+          onChange={(e) => {
+            setTheme(e.target.checked ? 'dark' : 'light')
+          }}
+        />
+        Use dark mode
+      </label>
+    </ThemeContext.Provider>
+  )
+}
+
+function Form({ children }) {
+  return (
+    <Panel title="Welcome">
+      <Button>Sign up</Button>
+      <Button>Log in</Button>
+    </Panel>
+  );
+}
+
+function Panel({ title, children }) {
+  const theme = useContext(ThemeContext);
+  const className = 'panel-' + theme;
+  return (
+    <section className={className}>
+      <h1>{title}</h1>
+      {children}
+    </section>
+  )
+}
+
+function Button({ children }) {
+  const theme = useContext(ThemeContext);
+  const className = 'button-' + theme;
+  return (
+    <button className={className}>
+      {children}
+    </button>
+  );
+}
+
+Example 2 of 5: Updating an object via context 
+rong ví dụ này, có một biến trạng thái currentUser lưu trữ một đối tượng. Bạn kết hợp { currentUser, setCurrentUser } thành một đối tượng duy nhất và truyền nó xuống thông qua context bên trong giá trị value={}.
+ Điều này cho phép bất kỳ thành phần nào phía dưới, chẳng hạn như LoginButton, đọc cả currentUser và setCurrentUser, và sau đó gọi setCurrentUser khi cần thiết
+ import { createContext, useContext, useState } from 'react';
+
+const CurrentUserContext = createContext(null);
+
+export default function MyApp() {
+  const [currentUser, setCurrentUser] = useState(null);
+  return (
+    <CurrentUserContext.Provider
+      value={{
+        currentUser,
+        setCurrentUser
+      }}
+    >
+      <Form />
+    </CurrentUserContext.Provider>
+  );
+}
+
+function Form({ children }) {
+  return (
+    <Panel title="Welcome">
+      <LoginButton />
+    </Panel>
+  );
+}
+
+function LoginButton() {
+  const {
+    currentUser,
+    setCurrentUser
+  } = useContext(CurrentUserContext);
+
+  if (currentUser !== null) {
+    return <p>You logged in as {currentUser.name}.</p>;
+  }
+
+  return (
+    <Button onClick={() => {
+      setCurrentUser({ name: 'Advika' })
+    }}>Log in as Advika</Button>
+  );
+}
+
+function Panel({ title, children }) {
+  return (
+    <section className="panel">
+      <h1>{title}</h1>
+      {children}
+    </section>
+  )
+}
+
+function Button({ children, onClick }) {
+  return (
+    <button className="button" onClick={onClick}>
+      {children}
+    </button>
+  );
+}
+
+
+
+Example 3 of 5: Multiple contexts 
+
+There are two independent contexts
+Có hai context độc lập. ThemeContext cung cấp chủ đề hiện tại, là một chuỗi, trong khi CurrentUserContext chứa đối tượng đại diện cho người dùng hiện tại.
+
+
+
+import { createContext, useContext, useState } from 'react';
+
+const ThemeContext = createContext(null);
+const CurrentUserContext = createContext(null);
+
+export default function MyApp() {
+  const [theme, setTheme] = useState('light');
+  const [currentUser, setCurrentUser] = useState(null);
+  return (
+    <ThemeContext.Provider value={theme}>
+      <CurrentUserContext.Provider
+        value={{
+          currentUser,
+          setCurrentUser
+        }}
+      >
+        <WelcomePanel />
+        <label>
+          <input
+            type="checkbox"
+            checked={theme === 'dark'}
+            onChange={(e) => {
+              setTheme(e.target.checked ? 'dark' : 'light')
+            }}
+          />
+          Use dark mode
+        </label>
+      </CurrentUserContext.Provider>
+    </ThemeContext.Provider>
+  )
+}
+
+function WelcomePanel({ children }) {
+  const {currentUser} = useContext(CurrentUserContext);
+  return (
+    <Panel title="Welcome">
+      {currentUser !== null ?
+        <Greeting /> :
+        <LoginForm />
+      }
+    </Panel>
+  );
+}
+
+function Greeting() {
+  const {currentUser} = useContext(CurrentUserContext);
+  return (
+    <p>You logged in as {currentUser.name}.</p>
+  )
+}
+
+function LoginForm() {
+  const {setCurrentUser} = useContext(CurrentUserContext);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const canLogin = firstName.trim() !== '' && lastName.trim() !== '';
+  return (
+    <>
+      <label>
+        First name{': '}
+        <input
+          required
+          value={firstName}
+          onChange={e => setFirstName(e.target.value)}
+        />
+      </label>
+      <label>
+        Last name{': '}
+        <input
+        required
+          value={lastName}
+          onChange={e => setLastName(e.target.value)}
+        />
+      </label>
+      <Button
+        disabled={!canLogin}
+        onClick={() => {
+          setCurrentUser({
+            name: firstName + ' ' + lastName
+          });
+        }}
+      >
+        Log in
+      </Button>
+      {!canLogin && <i>Fill in both fields.</i>}
+    </>
+  );
+}
+
+function Panel({ title, children }) {
+  const theme = useContext(ThemeContext);
+  const className = 'panel-' + theme;
+  return (
+    <section className={className}>
+      <h1>{title}</h1>
+      {children}
+    </section>
+  )
+}
+
+function Button({ children, disabled, onClick }) {
+  const theme = useContext(ThemeContext);
+  const className = 'button-' + theme;
+  return (
+    <button
+      className={className}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
+Example 4 of 5: Extracting providers to a component 
+
+
+Example 5 of 5: Scaling up with context and a reducer  : Mở rộng 
+Trong các ứng dụng lớn, thường thấy kết hợp context với một reducer để trích xuất logic liên quan đến một số trạng thái ra khỏi các thành phần. 
+Trong ví dụ này, tất cả các "kết nối" được ẩn trong TasksContext.js, nơi chứa một reducer và hai context riêng biệt
+
+
+import AddTask from './AddTask.js';
+import TaskList from './TaskList.js';
+import { TasksProvider } from './TasksContext.js';
+
+export default function TaskApp() {
+  return (
+    <TasksProvider>
+      <h1>Day off in Kyoto</h1>
+      <AddTask />
+      <TaskList />
+    </TasksProvider>
+  );
+}
+
+
+TasksContext.js
+import { createContext, useContext, useReducer } from 'react';
+
+const TasksContext = createContext(null);
+
+const TasksDispatchContext = createContext(null);
+
+export function TasksProvider({ children }) {
+  const [tasks, dispatch] = useReducer(
+    tasksReducer,
+    initialTasks
+  );
+
+  return (
+    <TasksContext.Provider value={tasks}>
+      <TasksDispatchContext.Provider value={dispatch}>
+        {children}
+      </TasksDispatchContext.Provider>
+    </TasksContext.Provider>
+  );
+}
+
+export function useTasks() {
+  return useContext(TasksContext);
+}
+
+export function useTasksDispatch() {
+  return useContext(TasksDispatchContext);
+}
+
+function tasksReducer(tasks, action) {
+  switch (action.type) {
+    case 'added': {
+      return [...tasks, {
+        id: action.id,
+        text: action.text,
+        done: false
+      }];
+    }
+    case 'changed': {
+      return tasks.map(t => {
+        if (t.id === action.task.id) {
+          return action.task;
+        } else {
+          return t;
+        }
+      });
+    }
+    case 'deleted': {
+      return tasks.filter(t => t.id !== action.id);
+    }
+    default: {
+      throw Error('Unknown action: ' + action.type);
+    }
+  }
+}
+
+const initialTasks = [
+  { id: 0, text: 'Philosopher’s Path', done: true },
+  { id: 1, text: 'Visit the temple', done: false },
+  { id: 2, text: 'Drink matcha', done: false }
+];
+
+
+AddTask.js
+import { useState, useContext } from 'react';
+import { useTasksDispatch } from './TasksContext.js';
+
+export default function AddTask() {
+  const [text, setText] = useState('');
+  const dispatch = useTasksDispatch();
+  return (
+    <>
+      <input
+        placeholder="Add task"
+        value={text}
+        onChange={e => setText(e.target.value)}
+      />
+      <button onClick={() => {
+        setText('');
+        dispatch({
+          type: 'added',
+          id: nextId++,
+          text: text,
+        }); 
+      }}>Add</button>
+    </>
+  );
+}
+
+let nextId = 3;
+
+
+
+
+
+TaskList.js
+import { useState, useContext } from 'react';
+import { useTasks, useTasksDispatch } from './TasksContext.js';
+
+export default function TaskList() {
+  const tasks = useTasks();
+  return (
+    <ul>
+      {tasks.map(task => (
+        <li key={task.id}>
+          <Task task={task} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Task({ task }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const dispatch = useTasksDispatch();
+  let taskContent;
+  if (isEditing) {
+    taskContent = (
+      <>
+        <input
+          value={task.text}
+          onChange={e => {
+            dispatch({
+              type: 'changed',
+              task: {
+                ...task,
+                text: e.target.value
+              }
+            });
+          }} />
+        <button onClick={() => setIsEditing(false)}>
+          Save
+        </button>
+      </>
+    );
+  } else {
+    taskContent = (
+      <>
+        {task.text}
+        <button onClick={() => setIsEditing(true)}>
+          Edit
+        </button>
+      </>
+    );
+  }
+  return (
+    <label>
+      <input
+        type="checkbox"
+        checked={task.done}
+        onChange={e => {
+          dispatch({
+            type: 'changed',
+            task: {
+              ...task,
+              done: e.target.checked
+            }
+          });
+        }}
+      />
+      {taskContent}
+      <button onClick={() => {
+        dispatch({
+          type: 'deleted',
+          id: task.id
+        });
+      }}>
+        Delete
+      </button>
+    </label>
+  );
+}
+
+Xác định một giá trị mặc định 
+
+you specified  giá trị mặc định   when you created that context:
+const ThemeContext = createContext(null);
+
+The default value never changes. If you want to update context, use it with state as described above.
+const ThemeContext = createContext('light');
+
+
+
++ Overriding context for a part of the tree 
+Bạn có thể ghi đè context cho một phần của cây bằng cách bao bọc phần đó trong một nhà cung cấp với giá trị khác.
+
+
+<ThemeContext.Provider value="dark">
+  ...
+  <ThemeContext.Provider value="light">
+    <Footer />
+  </ThemeContext.Provider>
+  ...
+</ThemeContext.Provider>
+
+
+
+
+Example 1 of 2: Overriding a theme 
+Here, the button inside the Footer receives a different context value ("light") than the buttons outside ("dark").
+
+import { createContext, useContext } from 'react';
+
+const ThemeContext = createContext(null);
+
+export default function MyApp() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <Form />
+    </ThemeContext.Provider>
+  )
+}
+
+function Form() {
+  return (
+    <Panel title="Welcome">
+      <Button>Sign up</Button>
+      <Button>Log in</Button>
+      <ThemeContext.Provider value="light">
+        <Footer />
+      </ThemeContext.Provider>
+    </Panel>
+  );
+}
+
+function Footer() {
+  return (
+    <footer>
+      <Button>Settings</Button>
+    </footer>
+  );
+}
+
+function Panel({ title, children }) {
+  const theme = useContext(ThemeContext);
+  const className = 'panel-' + theme;
+  return (
+    <section className={className}>
+      {title && <h1>{title}</h1>}
+      {children}
+    </section>
+  )
+}
+
+function Button({ children }) {
+  const theme = useContext(ThemeContext);
+  const className = 'button-' + theme;
+  return (
+    <button className={className}>
+      {children}
+    </button>
+  );
+}
+
+
+
++ Optimizing re-renders when passing objects and functions 
+You can pass any values via context, including objects and functions.
+function MyApp() {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  function login(response) {
+    storeCredentials(response.credentials);
+    setCurrentUser(response.user);
+  }
+
+  return (
+    <AuthContext.Provider value={{ currentUser, login }}>
+      <Page />
+    </AuthContext.Provider>
+  );
+}
+
+
+++ Chú ý đọc ở đây , chưa xogn 
+Ở đây, giá trị context là một đối tượng JavaScript với hai thuộc tính, trong đó một trong số đó là một hàm.
+ Mỗi khi MyApp render lại (ví dụ như khi cập nhật route), đây sẽ là một đối tượng khác trỏ đến một hàm khác, 
+ do đó React cũng phải render lại tất cả các thành phần sâu trong cây gọi useContext(AuthContext).
+
+Trong các ứng dụng nhỏ, điều này không phải là vấn đề. Tuy nhiên, không cần thiết phải render lại chúng nếu dữ liệu cơ bản, như currentUser, không thay đổi.
+ Để giúp React tận dụng điều đó, bạn có thể bao bọc hàm đăng nhập bằng useCallback và bao bọc việc tạo đối tượng vào useMemo. Điều này là một tối ưu hiệu suất.
+
+
+
+import { useCallback, useMemo } from 'react';
+
+function MyApp() {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const login = useCallback((response) => {
+    storeCredentials(response.credentials);
+    setCurrentUser(response.user);
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    currentUser,
+    login
+  }), [currentUser, login]);
+
+  return (
+    <AuthContext.Provider value={contextValue}>
+      <Page />
+    </AuthContext.Provider>
+  );
+}
+
++++ Troubleshooting 
+
+
+
+Không thấy giá trị từ nhà cung cấp của tôi trong thành phần của tôi
+Có một vài lý do chính mà điều này có thể xảy ra:
+
+Bạn đang render <SomeContext.Provider> trong cùng thành phần (hoặc dưới) nơi bạn gọi useContext(). 
+Hãy di chuyển <SomeContext.Provider> lên trên và bên ngoài thành phần gọi useContext().
+
+Bạn có thể đã quên bao bọc thành phần của bạn bằng <SomeContext.Provider>, hoặc bạn có thể đã đặt nó ở một phần cây khác so với những gì bạn nghĩ.
+ Hãy kiểm tra lại thứ tự cây sử dụng React DevTools.
+
+Bạn có thể đang gặp vấn đề xây dựng với công cụ của mình dẫn đến 
+SomeContext được nhìn thấy từ thành phần cung cấp và SomeContext được nhìn thấy từ thành phần đọc là hai đối tượng khác nhau. 
+Điều này có thể xảy ra nếu bạn sử dụng các liên kết tượng trưng, ví dụ. Bạn có thể xác minh điều này bằng cách gán chúng cho các biến toàn cục như window.
+SomeContext1 và window.SomeContext2, sau đó kiểm tra xem window.SomeContext1 === window.SomeContext2 trong console. 
+Nếu chúng không giống nhau, hãy sửa vấn đề này ở mức công cụ xây dựng.
+
+// 🚩 Doesn't work: no value prop
+<ThemeContext.Provider>
+   <Button />
+</ThemeContext.Provider>
+If you forget to specify value, it’s like passing value={undefined}.
+
+You may have also mistakingly used a different prop name by mistake:
+
+// 🚩 Doesn't work: prop should be called "value"
+<ThemeContext.Provider theme={theme}>
+   <Button />
+</ThemeContext.Provider>
+
+
+n both of these cases you should see a warning from React in the console. To fix them, call the prop value:
+
+// ✅ Passing the value prop
+<ThemeContext.Provider value={theme}>
+   <Button />
+</ThemeContext.Provider>
+
+
+Note that the default value from your createContext(defaultValue) call is only used if there is no matching provider above at all. If there is a 
+<SomeContext.Provider value={undefined}> component somewhere in the parent tree, the component calling useContext(SomeContext) will receive undefined as the context valu

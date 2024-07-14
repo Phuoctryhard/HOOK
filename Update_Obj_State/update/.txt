@@ -1,0 +1,96 @@
++ Update object InState 
+You can use the ... object spread syntax so that you don’t need to copy every property separately.
+
+setPerson({
+  ...person, // Copy the old fields
+  firstName: e.target.value // But override this one
+});
+
+Note that the ... spread syntax is “shallow”—it only copies things one level deep.
+This makes it fast, but it also means that if you want to update a nested property, you’ll have to use it more than once.
+
+- Bạn cũng có thể sử dụng các dấu [ và ] bên trong định nghĩa đối tượng để chỉ định một thuộc tính với tên động. 
+Dưới đây là cùng một ví dụ, nhưng chỉ sử dụng một trình xử lý sự kiện thay vì ba trình xử lý khác nhau:
+function handleChange(e) {
+    setPerson({
+      ...person,
+      [e.target.name]: e.target.value
+    });
+  }
+  Here, e.target.name refers to the name property given to the <input> DOM element.
+
+
+++ Updating a nested object 
+Consider a nested object structure like this:
+
+const [person, setPerson] = useState({
+  name: 'Niki de Saint Phalle',
+  artwork: {
+    title: 'Blue Nana',
+    city: 'Hamburg',
+    image: 'https://i.imgur.com/Sd1AgUOm.jpg',
+  }
+});
+C1:
+const nextArtwork = { ...person.artwork, city: 'New Delhi' };
+const nextPerson = { ...person, artwork: nextArtwork };
+setPerson(nextPerson);
+
+
+
+Or, written as a single function call:
+
+setPerson({
+  ...person, // Copy other fields
+  artwork: { // but replace the artwork
+    ...person.artwork, // with the same one
+    city: 'New Delhi' // but in New Delhi!
+  }
+});
+
+
++++++++ UPDATE logic with Immer 
+Draft : cung cấp bởi Immer là một loại đặc biệt của đối tượng, gọi là Proxy, có khả năng "ghi lại" những gì bạn làm với nó. Đây là lý do tại sao bạn có thể thay đổi
+ nó một cách tự do miễn là bạn thích! Bên trong,
+Immer xác định những phần của Draft đã được thay đổi và tạo ra một đối tượng hoàn toàn mới chứa các chỉnh sửa của bạn.
+
+
+To try Immer:
+
+Run npm install use-immer to add Immer as a dependency
+Then replace import { useState } from 'react' with import { useImmer } from 'use-immer'
+
+
+
+unction handleNameChange(e) {
+    updatePerson(draft => {
+      draft.name = e.target.value;
+    });
+  }
+
+  function handleTitleChange(e) {
+    updatePerson(draft => {
+      draft.artwork.title = e.target.value;
+    });
+  }
+
+  function handleCityChange(e) {
+    updatePerson(draft => {
+      draft.artwork.city = e.target.value;
+    });
+  }
+
+  function handleImageChange(e) {
+    updatePerson(draft => {
+      draft.artwork.image = e.target.value;
+    });
+  }
+Tóm tắt:
+
+Hãy xem xét tất cả trạng thái trong React như là bất biến.
+Khi lưu trữ các đối tượng trong trạng thái, thay đổi chúng mà không sử dụng cách bất biến sẽ không kích hoạt việc render và sẽ thay đổi trạng thái trong các "bản chụp" render trước đó.
+Thay vì thay đổi một đối tượng, hãy tạo một phiên bản mới của nó và kích hoạt việc render lại bằng cách thiết lập trạng thái mới.
+Bạn có thể sử dụng cú pháp sao chép đối tượng {...obj, something: 'newValue'} để tạo bản sao của các đối tượng.
+Cú pháp sao chép là nông: nó chỉ sao chép một cấp độ.
+Để cập nhật một đối tượng lồng nhau, bạn cần tạo các bản sao từ đầu đến nơi bạn đang cập nhật.
+Để giảm mã sao chép lặp đi lặp lại, hãy sử dụng Immer.

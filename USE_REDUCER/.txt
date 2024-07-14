@@ -1,0 +1,59 @@
++ USE REDUCER 
+useReducer is a React Hook that lets you add a reducer to your component.
+const [state, dispatch] = useReducer(reducer, initialArg, init?)
+
+Các tham số:
+
+reducer: Hàm (reducer)  cách cập nhật state . Hàm này phải là hàm thuần túy (pure function), nhận vào các đối số là state hiện tại và hành động (action), và trả về trạng thái tiếp theo.
+initialArg: Giá trị từ đó trạng thái ban đầu được tính toán. Điều này có thể là một giá trị của bất kỳ kiểu dữ liệu nào. Cách tính toán trạng thái ban đầu từ nó phụ thuộc vào đối số init tiếp theo.
+init (tùy chọn): Hàm khởi tạo, trả về trạng thái ban đầu. Nếu không được chỉ định, state  ban đầu được đặt thành initialArg. Nếu có init, trạng thái ban đầu được đặt thành kết quả của việc gọi init(initialArg).
+Kết quả trả về:
+
+useReducer trả về một mảng gồm hai giá trị:
+Trạng thái hiện tại. Trong lần render đầu tiên, nó được đặt thành init(initialArg) hoặc initialArg (nếu không có init).
+Hàm dispatch cho phép bạn cập nhật state  thành một giá trị khác và kích hoạt việc render lại.
+
+
++ dispatch function 
+Hàm dispatch được trả về bởi useReducer cho phép bạn cập nhật trạng thái thành một giá trị khác và kích hoạt việc render lại. 
+Bạn cần truyền hành động (action) là đối số duy nhất cho hàm dispatch.
+
+const [state, dispatch] = useReducer(reducer, { age: 42 });
+
+function handleClick() {
+  dispatch({ type: 'incremented_age' });
+  // ...
+}
+
+action: Nó có thể là một giá trị của bất kỳ kiểu dữ liệu nào. Theo quy ước, một hành động thường là một đối tượng với thuộc tính type để xác định loại hành động và có thể có các thuộc tính khác chứa thông tin bổ sung.
+Kết quả trả về:
+
+Hàm dispatch không có giá trị trả về.
+
+
+
++ Lưu ý :
+State is read-only. Don’t modify any objects or arrays in state:
+function reducer(state, action) {
+  switch (action.type) {
+    case 'incremented_age': {
+      // 🚩 Don't mutate an object in state like this:
+      state.age = state.age + 1;
+      return state;
+    }
+
+Instead, always return new objects from your reducer:
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'incremented_age': {
+      // ✅ Instead, return a new object
+      return {
+        ...state,
+        age: state.age + 1
+      };
+    }
+
+
+
+

@@ -1,0 +1,215 @@
++ useState cho phép chúng ta khai báo local state trong Function Component và cập nhật lại giá trị biến local state
+- dấu ngoặc vuông :
+const [state, setState] = useState(initialStateValue)
+Như trên chúng ta có thể hiểu:
+
+state: định nghĩa tên của state nó có thể là đơn giá trị hoặc object,.. (là thamg số của useState)
+setState: định nghĩa tên function dùng cho việc update state (là thamg số của useState)
+initialStateValue: là giá trị ban đầu của state. Ví dụ:
+
+
+Returns
+useState trả về một mảng với chính xác hai giá trị:
+
+Trạng thái hiện tại. Trong lần render đầu tiên, nó sẽ khớp với initialState mà bạn đã truyền vào.
+Hàm set cho phép bạn cập nhật trạng thái sang giá trị khác và kích hoạt việc render lại.
+---------------------------------NOTE Gọi trong cha 
+Caveats
+useState là một Hook, do đó bạn chỉ có thể gọi nó ở cấp độ cao nhất của component của bạn hoặc trong các Hooks của riêng bạn. Bạn không thể gọi nó trong vòng lặp hay điều kiện. 
+Nếu cần thiết, bạn nên trích xuất một component mới và di chuyển trạng thái vào đó.
+----------------------------------
+Trong chế độ nghiêm ngặt (Strict Mode), React sẽ gọi hàm khởi tạo của bạn hai lần để giúp bạn phát hiện các lỗi không cố ý.
+ Điều này chỉ xảy ra trong quá trình phát triển và không ảnh hưởng đến production. Nếu hàm khởi tạo của bạn là thuần túy (như nên là),
+  điều này không ảnh hưởng đến hành vi của nó. Kết quả từ một trong những lần gọi sẽ bị bỏ qua.
+
+
+updating a nested object 
+
+const [person, setPerson] = useState({
+    name: 'Niki de Saint Phalle',
+    artwork: {
+      title: 'Blue Nana',
+      city: 'Hamburg',
+      image: 'https://i.imgur.com/Sd1AgUOm.jpg',
+    }
+  });
+=>>> function handleTitleChange(e) {
+    setPerson({
+      ...person,
+      artwork: {
+        ...person.artwork,
+        title: e.target.value
+      }
+    });
+
+
++ Minh họa
+
+Trong ví dụ này, biến state todos chứa một mảng. Mỗi hàm xử lý của nút gọi setTodos với phiên bản tiếp theo của mảng đó. Cú pháp truyền rộng [...todos], todos.map() và todos.filter() đảm bảo rằng mảng state sẽ được thay thế thay vì bị biến đổi.
+
+
+
+App.js
+
+import { useState } from 'react';
+import AddTodo from './AddTodo.js';
+import TaskList from './TaskList.js';
+
+let nextId = 3;
+const initialTodos = [
+  { id: 0, title: 'Buy milk', done: true },
+  { id: 1, title: 'Eat tacos', done: false },
+  { id: 2, title: 'Brew tea', done: false },
+];
+
+export default function TaskApp() {
+  const [todos, setTodos] = useState(initialTodos);
+
+  function handleAddTodo(title) {
+    setTodos([
+      ...todos,
+      {
+        id: nextId++,
+        title: title,
+        done: false
+      }
+    ]);
+  }
+
+  function handleChangeTodo(nextTodo) {
+    setTodos(todos.map(t => {
+      if (t.id === nextTodo.id) {
+        return nextTodo;
+      } else {
+        return t;
+      }
+    }));
+  }
+
+  function handleDeleteTodo(todoId) {
+    setTodos(
+      todos.filter(t => t.id !== todoId)
+    );
+  }
+
+  return (
+    <>
+      <AddTodo
+        onAddTodo={handleAddTodo}
+      />
+      <TaskList
+        todos={todos}
+        onChangeTodo={handleChangeTodo}
+        onDeleteTodo={handleDeleteTodo}
+      />
+    </>
+  );
+}
+AddTodo.js
+
+import { useState } from 'react';
+
+export default function AddTodo({ onAddTodo }) {
+  const [title, setTitle] = useState('');
+  return (
+    <>
+      <input
+        placeholder="Add todo"
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+      />
+      <button onClick={() => {
+        setTitle('');
+        onAddTodo(title);
+      }}>Add</button>
+    </>
+  )
+}
+TaskList.js
+
+import { useState } from 'react';
+
+export default function TaskList({
+  todos,
+  onChangeTodo,
+  onDeleteTodo
+}) {
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo.id}>
+          <Task
+            todo={todo}
+            onChange={onChangeTodo}
+            onDelete={onDeleteTodo}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Task({ todo, onChange, onDelete }) {
+  const [isEditing, setIsEditing] = useState(false);
+  let todoContent;
+  if (isEditing) {
+    todoContent = (
+      <>
+        <input
+          value={todo.title}
+          onChange={e => {
+            onChange({
+              ...todo,
+              title: e.target.value
+            });
+          }} />
+        <button onClick={() => setIsEditing(false)}>
+          Save
+        </button>
+      </>
+    );
+  } else {
+    todoContent = (
+      <>
+        {todo.title}
+        <button onClick={() => setIsEditing(true)}>
+          Edit
+        </button>
+      </>
+    );
+  }
+  return (
+    <label>
+      <input
+        type="checkbox"
+        checked={todo.done}
+        onChange={e => {
+          onChange({
+            ...todo,
+            done: e.target.checked
+          });
+        }}
+      />
+      {todoContent}
+      <button onClick={() => onDelete(todo.id)}>
+        Delete
+      </button>
+    </label>
+  );
+}
+
+
+Updating state based on the previous state
+function handleClick() {
+  setAge(age + 1); // setAge(42 + 1)
+  setAge(age + 1); // setAge(42 + 1)
+  setAge(age + 1); // setAge(42 + 1)
+}However, after one click, age will only be 43 rather than 45! This is because calling the set function does not update the age state variable in the already running code. So each setAge(age + 1) call becomes setAge(43).
+
+To solve this problem, you may pass an updater function to setAge instead of the next state:
+
+function handleClick() {
+  setAge(a => a + 1); // setAge(42 => 43)
+  setAge(a => a + 1); // setAge(43 => 44)
+  setAge(a => a + 1); // setAge(44 => 45)
+}
